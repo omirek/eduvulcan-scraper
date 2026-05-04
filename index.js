@@ -35,7 +35,7 @@ const fs = require('fs');
     // =========================
     const aliasInput = page.locator('#Alias');
     await aliasInput.waitFor({ state: 'visible' });
-    await aliasInput.fill('process.env.LOGIN');
+    await aliasInput.fill(process.env.LOGIN);
 
     await page.click('#btNext');
 
@@ -52,7 +52,7 @@ const fs = require('fs');
     // =========================
     const passwordInput = page.locator('#Password');
     await passwordInput.waitFor({ state: 'visible' });
-    await passwordInput.fill('process.env.PASSWORD');
+    await passwordInput.fill(process.env.PASSWORD);
 
     await page.click('#btLogOn');
 
@@ -66,14 +66,7 @@ const fs = require('fs');
 	// =========================
 	// poczekaj aż strona faktycznie przejdzie dalej
 	await page.waitForLoadState('domcontentloaded');
-	console.log('🔎 debug: przed wyborem ucznia');
-
-	await page.screenshot({ path: 'debug-before-students.png', fullPage: true });
-
 	await page.waitForTimeout(2000);
-	
-	// debug: screenshot (mega ważne w Actions)
-	await page.screenshot({ path: 'debug-before-students.png', fullPage: true });
 	
 	// wybór ucznia
 	const studentLink = page.locator('a.connected-account.access-row').first();
