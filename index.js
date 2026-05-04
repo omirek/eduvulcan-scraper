@@ -66,6 +66,10 @@ const fs = require('fs');
 	// =========================
 	// poczekaj aż strona faktycznie przejdzie dalej
 	await page.waitForLoadState('domcontentloaded');
+	console.log('🔎 debug: przed wyborem ucznia');
+
+	await page.screenshot({ path: 'debug-before-students.png', fullPage: true });
+
 	await page.waitForTimeout(2000);
 	
 	// debug: screenshot (mega ważne w Actions)
