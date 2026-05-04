@@ -9,16 +9,20 @@ const fs = require('fs');
     // =========================
     // 1. STRONA STARTOWA
     // =========================
-   await page.goto('https://eduvulcan.pl/');
+    await page.goto('https://eduvulcan.pl/');
+    await page.waitForTimeout(2000);
 
-// 🔥 HARD REMOVE cookie overlay (wrapper + iframe)
-await page.evaluate(() => {
-  document.querySelector('#respect-privacy-wrapper')?.remove();
-});
+    // =========================
+    // 🍪 COOKIES (POPRAWKA — iframe)
+    // =========================
+    try {
+      const frame = page.frameLocator('#respect-privacy-frame');
+      await frame.locator('#save-default-button').click({ timeout: 5000 });
+    } catch {
+      // ignorujemy jeśli brak popupu
+    }
 
-// daj UI czas na stabilizację
-await page.waitForTimeout(800);
-
+    await page.waitForTimeout(1000);
 
     // =========================
     // 2. KLIKNIJ "ZALOGUJ SIĘ"
@@ -34,6 +38,14 @@ await page.waitForTimeout(800);
     await aliasInput.fill(process.env.LOGIN);
 
     await page.click('#btNext');
+
+    // =========================
+    // 🍪 DRUGI POPUP (MOŻE WRÓCIĆ)
+    // =========================
+    try {
+      const frame2 = page.frameLocator('#respect-privacy-frame');
+      await frame2.locator('#save-default-button').click({ timeout: 3000 });
+    } catch {}
 
     // =========================
     // 4. HASŁO
@@ -90,8 +102,6 @@ await page.waitForTimeout(800);
 
   } catch (err) {
     console.error('❌ Błąd:', err);
-
-    // debug screenshot (mega pomocne w Actions)
     await page.screenshot({ path: 'error.png', fullPage: true });
   }
 
