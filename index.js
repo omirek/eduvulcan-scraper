@@ -77,7 +77,7 @@ const fs = require('fs');
     // =========================
     // 7. API ZADANIA
     // =========================
-    const url = `https://uczen.eduvulcan.pl/pszczyna/api/SprawdzianyZadaniaDomowe?key=${key}&dataOd=2026-04-30T22:00:00.000Z&dataDo=2026-05-31T21:59:59.999Z`;
+    const url = `https://uczen.eduvulcan.pl/pszczyna/api/SprawdzianyZadaniaDomowe?dataOd=2026-04-30T22:00:00.000Z&dataDo=2026-05-31T21:59:59.999Z`;
 
     const response = await page.request.get(url);
     const data = await response.json();
