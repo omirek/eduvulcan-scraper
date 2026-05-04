@@ -11,12 +11,13 @@ const fs = require('fs');
     // =========================
    await page.goto('https://eduvulcan.pl/');
 
-// 🟢 zamknij cookies jeśli istnieją
-const cookieBtn = page.locator('#save-default-button');
+// 🔥 HARD REMOVE cookie overlay (wrapper + iframe)
+await page.evaluate(() => {
+  document.querySelector('#respect-privacy-wrapper')?.remove();
+});
 
-if (await cookieBtn.isVisible().catch(() => false)) {
-  await cookieBtn.click();
-}
+// daj UI czas na stabilizację
+await page.waitForTimeout(800);
 
 
     // =========================
