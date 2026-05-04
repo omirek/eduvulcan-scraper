@@ -64,12 +64,21 @@ const fs = require('fs');
     // =========================
 	// 6. WYBÓR UCZNIA
 	// =========================
+	// poczekaj aż strona faktycznie przejdzie dalej
+	await page.waitForLoadState('domcontentloaded');
+	await page.waitForTimeout(2000);
+	
+	// debug: screenshot (mega ważne w Actions)
+	await page.screenshot({ path: 'debug-before-students.png', fullPage: true });
+	
+	// wybór ucznia
 	const studentLink = page.locator('a.connected-account.access-row').first();
-
-	await studentLink.waitFor({ state: 'visible' });
+	
+	await studentLink.waitFor({ state: 'visible', timeout: 60000 });
 	await studentLink.click();
-
+	
 	console.log('👤 wybrano ucznia');
+
 
 	// poczekaj na przejście do dziennika
 	await page.waitForLoadState('networkidle');
