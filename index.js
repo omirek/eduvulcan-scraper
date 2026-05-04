@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
 
   try {
@@ -35,7 +35,7 @@ const fs = require('fs');
     // =========================
     const aliasInput = page.locator('#Alias');
     await aliasInput.waitFor({ state: 'visible' });
-    await aliasInput.fill(process.env.LOGIN);
+    await aliasInput.fill('process.env.LOGIN');
 
     await page.click('#btNext');
 
@@ -52,7 +52,7 @@ const fs = require('fs');
     // =========================
     const passwordInput = page.locator('#Password');
     await passwordInput.waitFor({ state: 'visible' });
-    await passwordInput.fill(process.env.PASSWORD);
+    await passwordInput.fill('process.env.PASSWORD');
 
     await page.click('#btLogOn');
 
@@ -62,26 +62,63 @@ const fs = require('fs');
     await page.waitForLoadState('networkidle');
 
     // =========================
-    // 6. WYCIĄGNIJ KEY Z URL
-    // =========================
-    const currentUrl = page.url();
-    const keyMatch = currentUrl.match(/key=([^&]+)/);
-    const key = keyMatch?.[1];
+	// 6. WYBÓR UCZNIA
+	// =========================
+	const studentLink = page.locator('a.connected-account.access-row').first();
 
-    if (!key) {
-      throw new Error('Nie znaleziono key w URL');
-    }
+	await studentLink.waitFor({ state: 'visible' });
+	await studentLink.click();
 
-    console.log('🔑 KEY:', key);
+	console.log('👤 wybrano ucznia');
 
+	// poczekaj na przejście do dziennika
+	await page.waitForLoadState('networkidle');
+
+
+	// =========================
+	// 7. WEJDŹ W "Sprawdziany i zadania domowe"
+	// =========================
+	const tasksLink = page.getByRole('link', { name: 'Sprawdziany i zadania domowe' });
+
+	await tasksLink.click();
+
+	console.log('📚 otwarto zadania');
+
+	// poczekaj aż aplikacja się ustabilizuje
+	await page.waitForLoadState('networkidle');
+	await page.waitForTimeout(3000);
+	
+	// =========================
+	// 8. WYCIĄGNIJ KEY Z URL (NOWY SPOSÓB)
+	// =========================
+	const currentUrl = page.url();
+
+	// dopasowanie: /App/KEY/
+	const match = currentUrl.match(/App\/([^/]+)\//);
+	const key = match?.[1];
+
+	if (!key) {
+	  throw new Error('Nie znaleziono key w URL');
+	}
+
+	console.log('🔑 KEY:', key);
+	
+	const now = new Date();
+	const past = new Date();
+	past.setDate(now.getDate() - 30);
+
+	const dataOd = past.toISOString();
+	const dataDo = now.toISOString();	
+	
     // =========================
     // 7. API ZADANIA
     // =========================
-    const url = `https://uczen.eduvulcan.pl/pszczyna/api/SprawdzianyZadaniaDomowe?dataOd=2026-04-30T22:00:00.000Z&dataDo=2026-05-31T21:59:59.999Z`;
+    const url = `https://uczen.eduvulcan.pl/pszczyna/api/SprawdzianyZadaniaDomowe?key=${key}&dataOd=${dataOd}&dataDo=${dataDo}`;
 
     const response = await page.request.get(url);
     const data = await response.json();
 
+	console.log(data)
     // =========================
     // 8. FILTR ZADAŃ DOMOWYCH
     // =========================
