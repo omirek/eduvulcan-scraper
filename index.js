@@ -8,11 +8,24 @@ const fs = require('fs');
   // 🔐 logowanie
   await page.goto('https://eduvulcan.pl/logowanie');
 
-  await page.fill('input[type="text"]', process.env.LOGIN);
-  await page.fill('input[type="password"]', process.env.PASSWORD);
-  await page.click('button[type="submit"]');
+// 1️⃣ wpisz login
+await page.waitForSelector('input[name="Login"]', { state: 'visible' });
+await page.fill('input[name="Login"]', process.env.LOGIN);
 
-  await page.waitForLoadState('networkidle');
+// 2️⃣ kliknij "Dalej"
+await page.click('button[type="submit"]');
+
+// 3️⃣ poczekaj aż pojawi się pole hasła
+await page.waitForSelector('input[name="Password"]', { state: 'visible' });
+
+// 4️⃣ wpisz hasło
+await page.fill('input[name="Password"]', process.env.PASSWORD);
+
+// 5️⃣ zaloguj
+await page.click('button[type="submit"]');
+
+// 6️⃣ poczekaj na zalogowanie
+await page.waitForLoadState('networkidle');
 
   // 🔍 przechwycenie requestu z key
   let apiUrl = null;
