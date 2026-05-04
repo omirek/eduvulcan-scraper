@@ -1,0 +1,12 @@
+{
+  "name": "eduvulcan-scraper",
+  "version": "1.0.0",
+  "description": "Scraper zadań domowych EduVulcan",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "playwright": "^1.44.0"
+  }
+}
