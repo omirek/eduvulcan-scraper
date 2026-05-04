@@ -22,6 +22,10 @@ jobs:
 
       - name: Save results
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: tasks
-          path: tasks.json
+          name: debug
+          path: |
+            tasks.json
+            debug-before-students.png
+
