@@ -5,84 +5,67 @@ const fs = require('fs');
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
-  // 🔐 logowanie
-  await page.goto('https://eduvulcan.pl/logowanie');
+  try {
+    // 1. wejście na stronę główną
+    await page.goto('https://eduvulcan.pl/');
 
-// 1️⃣ wpisz login
-await page.waitForSelector('input[name="Login"]', { state: 'visible' });
-await page.fill('input[name="Login"]', process.env.LOGIN);
+    // 2. klik "Zaloguj się"
+    await page.click('#panelLoginButton');
 
-// 2️⃣ kliknij "Dalej"
-await page.click('button[type="submit"]');
+    // 3. ekran loginu
+    const aliasInput = page.locator('#Alias');
+    await aliasInput.waitFor({ state: 'visible' });
+    await aliasInput.fill(process.env.LOGIN);
 
-// 3️⃣ poczekaj aż pojawi się pole hasła
-await page.waitForSelector('input[name="Password"]', { state: 'visible' });
+    // 4. dalej
+    await page.click('#btNext');
 
-// 4️⃣ wpisz hasło
-await page.fill('input[name="Password"]', process.env.PASSWORD);
+    // 5. ekran hasła
+    const passwordInput = page.locator('#Password');
+    await passwordInput.waitFor({ state: 'visible' });
+    await passwordInput.fill(process.env.PASSWORD);
 
-// 5️⃣ zaloguj
-await page.click('button[type="submit"]');
+    // 6. logowanie
+    await page.click('#btLogOn');
 
-// 6️⃣ poczekaj na zalogowanie
-await page.waitForLoadState('networkidle');
+    // 7. poczekaj na pełne zalogowanie
+    await page.waitForLoadState('networkidle');
 
-  // 🔍 przechwycenie requestu z key
-  let apiUrl = null;
+    // 8. wyciągnięcie key z URL
+    const currentUrl = page.url();
+    const keyMatch = currentUrl.match(/key=([^&]+)/);
+    const key = keyMatch?.[1];
 
-  page.on('request', (request) => {
-    const url = request.url();
-
-    if (url.includes('SprawdzianyZadaniaDomowe')) {
-      apiUrl = url;
+    if (!key) {
+      throw new Error('Nie znaleziono key w URL po logowaniu');
     }
-  });
 
-  // 👉 wymuś załadowanie danych (wejście w widok)
-  await page.goto('https://uczen.eduvulcan.pl/');
-  await page.waitForTimeout(5000);
+    console.log('🔑 KEY:', key);
 
-  if (!apiUrl) {
-    console.log('❌ Nie znaleziono API URL');
-    await browser.close();
-    return;
+    // 9. API request
+    const url = `https://uczen.eduvulcan.pl/pszczyna/api/SprawdzianyZadaniaDomowe?key=${key}&dataOd=2026-04-30T22:00:00.000Z&dataDo=2026-05-31T21:59:59.999Z`;
+
+    const response = await page.request.get(url);
+    const data = await response.json();
+
+    // 10. filtr zadań domowych (typ: 4)
+    const homework = data
+      .filter(item => item.typ === 4)
+      .map(item => ({
+        id: item.id,
+        przedmiot: item.przedmiotNazwa,
+        dataDodania: item.data
+      }));
+
+    // 11. zapis
+    fs.writeFileSync('tasks.json', JSON.stringify(homework, null, 2));
+
+    console.log(`📦 Pobrano zadań: ${homework.length}`);
+
+  } catch (err) {
+    console.error('❌ Błąd:', err);
+    await page.screenshot({ path: 'error.png', fullPage: true });
   }
-
-  console.log('API URL:', apiUrl);
-
-  // 📡 pobranie danych BEZ klikania
-  const response = await page.request.get(apiUrl);
-  const data = await response.json();
-
-  // 🎯 filtr: tylko zadania domowe
-  const homework = data
-    .filter(item => item.typ === 4)
-    .map(item => ({
-      id: item.id,
-      przedmiot: item.przedmiotNazwa,
-      dataDodania: item.data
-    }));
-
-  // 💾 zapis
-  fs.writeFileSync('tasks.json', JSON.stringify(homework, null, 2));
-
-  // 🔄 porównanie z poprzednim uruchomieniem
-  let old = [];
-  if (fs.existsSync('tasks_old.json')) {
-    old = JSON.parse(fs.readFileSync('tasks_old.json'));
-  }
-
-  const newTasks = homework.filter(
-    t => !old.some(o => o.id === t.id)
-  );
-
-  if (newTasks.length > 0) {
-    console.log('🆕 NOWE ZADANIA:', newTasks);
-  } else {
-    console.log('Brak nowych zadań');
-  }
-
-  fs.writeFileSync('tasks_old.json', JSON.stringify(homework, null, 2));
 
   await browser.close();
 })();
