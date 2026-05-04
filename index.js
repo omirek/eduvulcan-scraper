@@ -6,49 +6,74 @@ const fs = require('fs');
   const page = await browser.newPage();
 
   try {
-    // 1. wejście na stronę główną
+    // =========================
+    // 1. STRONA STARTOWA
+    // =========================
     await page.goto('https://eduvulcan.pl/');
 
-    // 2. klik "Zaloguj się"
+    // 🧹 usuń cookie overlay (KLUCZOWE FIX)
+    await page.addStyleTag({
+      content: `
+        #respect-privacy-wrapper {
+          display: none !important;
+          pointer-events: none !important;
+        }
+      `
+    });
+
+    // =========================
+    // 2. KLIKNIJ "ZALOGUJ SIĘ"
+    // =========================
+    await page.waitForSelector('#panelLoginButton', { state: 'visible' });
     await page.click('#panelLoginButton');
 
-    // 3. ekran loginu
+    // =========================
+    // 3. LOGIN (Alias)
+    // =========================
     const aliasInput = page.locator('#Alias');
     await aliasInput.waitFor({ state: 'visible' });
     await aliasInput.fill(process.env.LOGIN);
 
-    // 4. dalej
     await page.click('#btNext');
 
-    // 5. ekran hasła
+    // =========================
+    // 4. HASŁO
+    // =========================
     const passwordInput = page.locator('#Password');
     await passwordInput.waitFor({ state: 'visible' });
     await passwordInput.fill(process.env.PASSWORD);
 
-    // 6. logowanie
     await page.click('#btLogOn');
 
-    // 7. poczekaj na pełne zalogowanie
+    // =========================
+    // 5. CZEKAJ NA ZALOGOWANIE
+    // =========================
     await page.waitForLoadState('networkidle');
 
-    // 8. wyciągnięcie key z URL
+    // =========================
+    // 6. WYCIĄGNIJ KEY Z URL
+    // =========================
     const currentUrl = page.url();
     const keyMatch = currentUrl.match(/key=([^&]+)/);
     const key = keyMatch?.[1];
 
     if (!key) {
-      throw new Error('Nie znaleziono key w URL po logowaniu');
+      throw new Error('Nie znaleziono key w URL');
     }
 
     console.log('🔑 KEY:', key);
 
-    // 9. API request
+    // =========================
+    // 7. API ZADANIA
+    // =========================
     const url = `https://uczen.eduvulcan.pl/pszczyna/api/SprawdzianyZadaniaDomowe?key=${key}&dataOd=2026-04-30T22:00:00.000Z&dataDo=2026-05-31T21:59:59.999Z`;
 
     const response = await page.request.get(url);
     const data = await response.json();
 
-    // 10. filtr zadań domowych (typ: 4)
+    // =========================
+    // 8. FILTR ZADAŃ DOMOWYCH
+    // =========================
     const homework = data
       .filter(item => item.typ === 4)
       .map(item => ({
@@ -57,13 +82,17 @@ const fs = require('fs');
         dataDodania: item.data
       }));
 
-    // 11. zapis
+    // =========================
+    // 9. ZAPIS PLIKU
+    // =========================
     fs.writeFileSync('tasks.json', JSON.stringify(homework, null, 2));
 
     console.log(`📦 Pobrano zadań: ${homework.length}`);
 
   } catch (err) {
     console.error('❌ Błąd:', err);
+
+    // debug screenshot (mega pomocne w Actions)
     await page.screenshot({ path: 'error.png', fullPage: true });
   }
 
