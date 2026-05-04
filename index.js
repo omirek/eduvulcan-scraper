@@ -9,17 +9,15 @@ const fs = require('fs');
     // =========================
     // 1. STRONA STARTOWA
     // =========================
-    await page.goto('https://eduvulcan.pl/');
+   await page.goto('https://eduvulcan.pl/');
 
-    // 🧹 usuń cookie overlay (KLUCZOWE FIX)
-    await page.addStyleTag({
-      content: `
-        #respect-privacy-wrapper {
-          display: none !important;
-          pointer-events: none !important;
-        }
-      `
-    });
+// 🟢 zamknij cookies jeśli istnieją
+const cookieBtn = page.locator('#save-default-button');
+
+if (await cookieBtn.isVisible().catch(() => false)) {
+  await cookieBtn.click();
+}
+
 
     // =========================
     // 2. KLIKNIJ "ZALOGUJ SIĘ"
