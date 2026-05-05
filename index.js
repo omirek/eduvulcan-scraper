@@ -157,11 +157,12 @@ console.log('URL:', process.env.SUPABASE_URL);
 const rows = homework.map(task => ({
   id: task.id,
   przedmiot: task.przedmiot,
-  data_dodania: task.dataDodania
+  target_date: task.dataDodania,
+  ingested_at: new Date().toISOString()
 }));
 
 // zapis (insert + ignore/update przy konflikcie id)
-const { data: result, error } = await supabase
+const { data, error } = await supabase
   .from('homework')
   .upsert(rows, { onConflict: 'id' });
 
