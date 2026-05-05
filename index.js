@@ -9,6 +9,7 @@ const supabase = createClient(
     realtime: false
   }
 );
+console.log('URL:', process.env.SUPABASE_URL);
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
