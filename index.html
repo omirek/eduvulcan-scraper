@@ -1,87 +1,168 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>Zadania domowe</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Homework Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
     }
 
-    h1 {
-      margin-bottom: 20px;
+    header {
+      padding: 24px;
+      background: #111827;
+      border-bottom: 1px solid #1f2937;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .task {
-      background: white;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #334155;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .subject {
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 15px;
     }
 
     .date {
-      color: #666;
-      font-size: 0.9em;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      margin-top: 8px;
+    }
+
+    .future {
+      background: #064e3b;
+      color: #34d399;
+    }
+
+    .soon {
+      background: #7c2d12;
+      color: #fb923c;
+    }
+
+    .overdue {
+      background: #7f1d1d;
+      color: #f87171;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
     }
   </style>
 </head>
+
 <body>
+  <header>
+    <h1>📚 Zadania domowe</h1>
+    <span id="count">0</span>
+  </header>
 
-  <h1>📚 Zadania domowe</h1>
-  <div id="list">Ładowanie...</div>
+  <div class="container" id="list"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const supabaseClient = supabase.createClient(
-      'https://pyrkcqdgteywmwbkvufm.supabase.co',   // ← TU URL
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5cmtjcWRndGV5d213Ymt2dWZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5Mjc0NzEsImV4cCI6MjA5MzUwMzQ3MX0.ea3z10fBnKkUIrDBUbfQL3lgKuB_xpKFuHnQVrbW5mU'                      // ← TU ANON KEY
-    );
+<script>
+const supabase = window.supabase.createClient(
+  "https://pyrkcqdgteywmwbkvufm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5cmtjcWRndGV5d213Ymt2dWZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5Mjc0NzEsImV4cCI6MjA5MzUwMzQ3MX0.ea3z10fBnKkUIrDBUbfQL3lgKuB_xpKFuHnQVrbW5mU"
+);
 
-    async function loadTasks() {
-      const { data, error } = await supabaseClient
-        .from('homework')
-        .select('*')
-        .order('ingested_at', { ascending: false });
+async function load() {
+  const { data, error } = await supabase
+    .from('homework')
+    .select('*')
+    .order('target_date', { ascending: true });
 
-      const list = document.getElementById('list');
+  const list = document.getElementById('list');
+  const count = document.getElementById('count');
 
-      if (error) {
-        list.innerHTML = '❌ Błąd ładowania danych';
-        console.error(error);
-        return;
-      }
+  if (error) {
+    list.innerHTML = `<div class="empty">Błąd ładowania danych</div>`;
+    return;
+  }
 
-      if (!data || data.length === 0) {
-        list.innerHTML = 'Brak zadań';
-        return;
-      }
+  if (!data || data.length === 0) {
+    list.innerHTML = `<div class="empty">Brak zadań 🎉</div>`;
+    return;
+  }
 
-      list.innerHTML = '';
+  count.textContent = data.length;
 
-      data.forEach(task => {
-        const div = document.createElement('div');
-        div.className = 'task';
+  const now = new Date();
 
-        const date = new Date(task.data_dodania).toLocaleString();
+  list.innerHTML = data.map(task => {
+    const date = new Date(task.target_date);
+    const diff = (date - now) / (1000 * 60 * 60 * 24);
 
-        div.innerHTML = `
-          <div class="subject">${task.przedmiot}</div>
-          <div class="date">${date}</div>
-        `;
+    let badge = "future";
+    let label = "w przyszłości";
 
-        list.appendChild(div);
-      });
+    if (diff < 0) {
+      badge = "overdue";
+      label = "po terminie";
+    } else if (diff < 2) {
+      badge = "soon";
+      label = "wkrótce";
     }
 
-    loadTasks();
-  </script>
+    return `
+      <div class="card">
+        <div class="top">
+          <div class="subject">${task.przedmiot}</div>
+          <div class="date">${date.toLocaleString()}</div>
+        </div>
+        <div class="badge ${badge}">${label}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+load();
+</script>
 
 </body>
 </html>
