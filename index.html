@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Zadania domowe</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .task {
+      background: white;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .subject {
+      font-weight: bold;
+    }
+
+    .date {
+      color: #666;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📚 Zadania domowe</h1>
+  <div id="list">Ładowanie...</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseClient = supabase.createClient(
+      'https://eduvulcan-scraper.supabase.co',   // ← TU URL
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5cmtjcWRndGV5d213Ymt2dWZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5Mjc0NzEsImV4cCI6MjA5MzUwMzQ3MX0.ea3z10fBnKkUIrDBUbfQL3lgKuB_xpKFuHnQVrbW5mU'                      // ← TU ANON KEY
+    );
+
+    async function loadTasks() {
+      const { data, error } = await supabaseClient
+        .from('homework')
+        .select('*')
+        .order('data_dodania', { ascending: false });
+
+      const list = document.getElementById('list');
+
+      if (error) {
+        list.innerHTML = '❌ Błąd ładowania danych';
+        console.error(error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        list.innerHTML = 'Brak zadań';
+        return;
+      }
+
+      list.innerHTML = '';
+
+      data.forEach(task => {
+        const div = document.createElement('div');
+        div.className = 'task';
+
+        const date = new Date(task.data_dodania).toLocaleString();
+
+        div.innerHTML = `
+          <div class="subject">${task.przedmiot}</div>
+          <div class="date">${date}</div>
+        `;
+
+        list.appendChild(div);
+      });
+    }
+
+    loadTasks();
+  </script>
+
+</body>
+</html>
