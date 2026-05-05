@@ -32,6 +32,12 @@
       transition: 0.2s;
     }
 
+    .ingested {
+      color: #64748b;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
     .task:hover {
       transform: translateY(-2px);
       border-color: #334155;
@@ -88,19 +94,27 @@
 
     list.innerHTML = '';
 
-    data.forEach(task => {
-      const div = document.createElement('div');
-      div.className = 'task';
+   data.forEach(task => {
+  const div = document.createElement('div');
+  div.className = 'task';
 
-      const date = new Date(task.target_date).toLocaleString();
+  const target = new Date(task.target_date).toLocaleString();
+  const ingested = new Date(task.ingested_at).toLocaleString();
 
-      div.innerHTML = `
-        <div class="subject">${task.przedmiot}</div>
-        <div class="date">${date}</div>
-      `;
+  div.innerHTML = `
+    <div class="subject">${task.przedmiot}</div>
 
-      list.appendChild(div);
-    });
+    <div class="date">
+      📌 deadline: <b>${target}</b>
+    </div>
+
+    <div class="ingested">
+      ⏱ pobrane: ${ingested}
+    </div>
+  `;
+
+  list.appendChild(div);
+});
   }
 
   loadTasks();
