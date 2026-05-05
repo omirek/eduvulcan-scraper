@@ -145,7 +145,19 @@ const supabase = createClient(
     // =========================
     // 9. ZAPIS PLIKU
     // =========================
-    fs.writeFileSync('tasks.json', JSON.stringify(homework, null, 2));
+    for (const task of homework) {
+	  const { error } = await supabase
+	    .from('homework')
+	    .insert({
+	      id: task.id,
+	      przedmiot: task.przedmiot,
+	      data_dodania: task.dataDodania
+	    });
+	
+	  if (error && !error.message.includes('duplicate')) {
+	    console.error('❌ supabase error:', error);
+	  }
+	}
 
     console.log(`📦 Pobrano zadań: ${homework.length}`);
 
