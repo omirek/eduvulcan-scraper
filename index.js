@@ -135,13 +135,13 @@ console.log('URL:', process.env.SUPABASE_URL);
     const url = `https://uczen.eduvulcan.pl/pszczyna/api/SprawdzianyZadaniaDomowe?key=${key}&dataOd=${dataOd}&dataDo=${dataDo}`;
 
     const response = await page.request.get(url);
-    const data = await response.json();
+    const apiResponse = await response.json();
 
-	console.log(data)
+	console.log(apiResponse)
     // =========================
     // 8. FILTR ZADAŃ DOMOWYCH
     // =========================
-    const homework = data
+    const homework = apiResponse
       .filter(item => item.typ === 4)
       .map(item => ({
         id: item.id,
