@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "playwright": "^1.44.0",
-    "@supabase/supabase-js": "^2.0.0"
+    "@supabase/supabase-js": "^2.0.0",
+    "ws": "^8.18.0"
   }
 }
