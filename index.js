@@ -1,5 +1,11 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
