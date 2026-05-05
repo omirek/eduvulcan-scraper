@@ -142,22 +142,27 @@ const supabase = createClient(
         dataDodania: item.data
       }));
 
-    // =========================
-    // 9. ZAPIS PLIKU
-    // =========================
-    for (const task of homework) {
-	  const { error } = await supabase
-	    .from('homework')
-	    .insert({
-	      id: task.id,
-	      przedmiot: task.przedmiot,
-	      data_dodania: task.dataDodania
-	    });
-	
-	  if (error && !error.message.includes('duplicate')) {
-	    console.error('❌ supabase error:', error);
-	  }
-	}
+ // =========================
+// 9. ZAPIS DO SUPABASE
+// =========================
+
+// przygotuj payload pod bazę
+const rows = homework.map(task => ({
+  id: task.id,
+  przedmiot: task.przedmiot,
+  data_dodania: task.dataDodania
+}));
+
+// zapis (insert + ignore/update przy konflikcie id)
+const { data: result, error } = await supabase
+  .from('homework')
+  .upsert(rows, { onConflict: 'id' });
+
+if (error) {
+  console.error('❌ supabase error:', error);
+} else {
+  console.log(`✅ zapisano/zweryfikowano rekordów: ${rows.length}`);
+}
 
     console.log(`📦 Pobrano zadań: ${homework.length}`);
 
