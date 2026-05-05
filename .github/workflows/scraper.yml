@@ -3,6 +3,7 @@ name: EduVulcan Scraper
 on:
   schedule:
     - cron: '0 19 * * *'
+  workflow_dispatch: 
 
 jobs:
   run:
