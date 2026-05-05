@@ -48,7 +48,7 @@
       const { data, error } = await supabaseClient
         .from('homework')
         .select('*')
-        .order('data_dodania', { ascending: false });
+        .order('ingested_at', { ascending: false });
 
       const list = document.getElementById('list');
 
