@@ -1,12 +1,15 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY,
   {
-    realtime: false
+    realtime: {
+      transport: ws
+    }
   }
 );
 console.log('URL:', process.env.SUPABASE_URL);
