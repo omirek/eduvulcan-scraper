@@ -164,7 +164,9 @@ const rows = homework.map(task => ({
 // zapis (insert + ignore/update przy konflikcie id)
 const { data, error } = await supabase
   .from('homework')
-  .insert(rows);
+  .insert(rows, {
+    ignoreDuplicates: true
+  });
 
 if (error) {
   console.error('❌ supabase error:', error);
