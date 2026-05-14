@@ -46,7 +46,7 @@ console.log('URL:', process.env.SUPABASE_URL);
     // =========================
     // 3. LOGIN (Alias)
     // =========================
-    const aliasInput = page.locator('#Alias');
+    const aliasInput = page.locator('#UserName');
     await aliasInput.waitFor({ state: 'visible' });
     await aliasInput.fill(process.env.LOGIN);
 
